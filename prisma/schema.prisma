@@ -1,0 +1,63 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  guias     Guia[]
+
+  @@map("users")
+}
+
+model Guia {
+  id            String      @id @default(cuid())
+  numero        String      @unique
+  origen        String
+  destino       String
+  estado        GuiaStatus  @default(PENDIENTE)
+  fechaCreacion DateTime    @default(now())
+  fechaEntrega  DateTime?
+  cliente       String
+  descripcion   String?
+  peso          Float?
+  valor         Float?
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
+  historial     Historial[]
+
+  @@map("guias")
+}
+
+model Historial {
+  id         String     @id @default(cuid())
+  guiaId     String
+  estado     GuiaStatus
+  fecha      DateTime   @default(now())
+  comentario String?
+  guia       Guia       @relation(fields: [guiaId], references: [id], onDelete: Cascade)
+
+  @@map("historial")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum GuiaStatus {
+  PENDIENTE
+  EN_TRANSITO
+  ENTREGADA
+  CANCELADA
+}
